@@ -1,5 +1,6 @@
 package com.devsuperior.exec.tdd.cap03.validation_and_security.controllers;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -106,5 +107,16 @@ public class CityControllerIntegrationTests {
 		.andExpect(status().isUnprocessableEntity())
 		.andExpect(jsonPath("$.errors[0].fieldName").value("name"))
 		.andExpect(jsonPath("$.errors[0].message").value("Campo requerido"));
+	}
+	
+	@Test
+	public void findAllShouldReturnAllResourcesSortedByName() throws Exception {
+		
+		mockMvc.perform(get("/cities")
+				.contentType(MediaType.APPLICATION_JSON))
+		.andExpect(status().isOk())
+		.andExpect(jsonPath("$[0].name").value("Belo Horizonte"))
+		.andExpect(jsonPath("$[1].name").value("Belém"))
+		.andExpect(jsonPath("$[2].name").value("Brasília"));
 	}
 }
