@@ -123,4 +123,22 @@ public class EventControllerIntegrationTests {
 		.andExpect(jsonPath("$.errors[0].message").value("Campo requerido"));
 	}
 	
+	@Test
+	public void insertShouldReturnUnprocessableEntityWhenAdminLoggedAndPastDate() throws Exception {
+
+		String accessToken = tokenUtil.obtainAccessToken(mockMvc, adminUsername, adminPassword);
+		LocalDate pastMonth = LocalDate.now().minusMonths(1L);
+		
+		EventDTO eventDTO = new EventDTO(null, "Expo XP", pastMonth, "https://expoxp.com.br", 1L);
+		String jsonBody = objectMapper.writeValueAsString(eventDTO);
+		
+		mockMvc.perform(post("/events")
+				.header("Authorization", "Bearer " + accessToken)
+				.content(jsonBody)
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON))	
+		.andExpect(status().isUnprocessableEntity())
+		.andExpect(jsonPath("$.errors[0].fieldName").value("date"))
+		.andExpect(jsonPath("$.errors[0].message").value("A data do evento não pode ser passada"));
+	}
 }
