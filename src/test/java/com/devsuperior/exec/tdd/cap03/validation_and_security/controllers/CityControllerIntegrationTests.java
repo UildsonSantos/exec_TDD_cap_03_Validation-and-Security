@@ -57,8 +57,10 @@ public class CityControllerIntegrationTests {
 	}
 	
 	@Test
-	public void insertShouldReturnForbiddenWhenClientLogged() throws Exception {		
-		String accessToken = tokenUtil.obtainAccessToken(mockMvc, clientUsername, clientPassword);		
+	public void insertShouldReturnForbiddenWhenClientLogged() throws Exception {	
+		
+		String accessToken = tokenUtil.obtainAccessToken(mockMvc, clientUsername, clientPassword);	
+		
 		CityDTO cityDTO = new CityDTO(null, "Recife");
 		String jsonBody = objectMapper.writeValueAsString(cityDTO);
 		
@@ -76,8 +78,7 @@ public class CityControllerIntegrationTests {
 		String accessToken = tokenUtil.obtainAccessToken(mockMvc, adminUsername, adminPassword);
 
 		CityDTO cityDTO = new CityDTO(null, "Recife");
-		String jsonBody = objectMapper.writeValueAsString(cityDTO);
-		
+		String jsonBody = objectMapper.writeValueAsString(cityDTO);		
 		
 		mockMvc.perform(post("/cities")				
 				.header("Authorization", "Bearer " + accessToken)
@@ -87,5 +88,23 @@ public class CityControllerIntegrationTests {
 		.andExpect(status().isCreated())
 		.andExpect(jsonPath("$.id").exists())
 		.andExpect(jsonPath("$.name").value("Recife"));
+	}
+	
+	@Test
+	public void insertShouldReturnUnprocessableEntityWhenAdminLoggedAndBlankName() throws Exception {
+
+		String accessToken = tokenUtil.obtainAccessToken(mockMvc, adminUsername, adminPassword);
+
+		CityDTO cityDTO = new CityDTO(null, "    ");
+		String jsonBody = objectMapper.writeValueAsString(cityDTO);		
+		
+		mockMvc.perform(post("/cities")
+				.header("Authorization", "Bearer " + accessToken)
+				.content(jsonBody)
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON))		
+		.andExpect(status().isUnprocessableEntity())
+		.andExpect(jsonPath("$.errors[0].fieldName").value("name"))
+		.andExpect(jsonPath("$.errors[0].message").value("Campo requerido"));
 	}
 }
