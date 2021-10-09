@@ -1,5 +1,6 @@
 package com.devsuperior.exec.tdd.cap03.validation_and_security.controllers;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -160,4 +161,13 @@ public class EventControllerIntegrationTests {
 		.andExpect(jsonPath("$.errors[0].fieldName").value("cityId"))
 		.andExpect(jsonPath("$.errors[0].message").value("Campo requerido"));
 	}
+	
+	@Test
+	public void findAllShouldReturnPagedResources() throws Exception {
+		
+		mockMvc.perform(get("/events")
+				.contentType(MediaType.APPLICATION_JSON))
+		.andExpect(status().isOk())
+		.andExpect(jsonPath("$.content").exists());
+	}	
 }
