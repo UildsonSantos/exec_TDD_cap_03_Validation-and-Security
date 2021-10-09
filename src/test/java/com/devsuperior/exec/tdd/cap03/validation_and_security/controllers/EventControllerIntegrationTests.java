@@ -35,13 +35,16 @@ public class EventControllerIntegrationTests {
 
 	private String clientUsername;
 	private String clientPassword;
+	private String adminUsername;
+	private String adminPassword;
 	
-
 	@BeforeEach
 	void setUp() throws Exception {
 		
 		clientUsername = "ana@gmail.com";
 		clientPassword = "123456";
+		adminUsername = "bob@gmail.com";
+		adminPassword = "123456";
 	}
 
 	@Test
@@ -78,4 +81,46 @@ public class EventControllerIntegrationTests {
 		.andExpect(jsonPath("$.url").value("https://expoxp.com.br"))
 		.andExpect(jsonPath("$.cityId").value(1L));
 	}
+	
+	@Test
+	public void insertShouldInsertResourceWhenAdminLoggedAndCorrectData() throws Exception {
+
+		String accessToken = tokenUtil.obtainAccessToken(mockMvc, adminUsername, adminPassword);
+		LocalDate nextMonth = LocalDate.now().plusMonths(1L);
+		
+		EventDTO eventDTO = new EventDTO(null, "Expo XP", nextMonth, "https://expoxp.com.br", 1L);
+		String jsonBody = objectMapper.writeValueAsString(eventDTO);
+		
+		mockMvc.perform(post("/events")
+				.header("Authorization", "Bearer " + accessToken)
+				.content(jsonBody)
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON))		
+		.andExpect(status().isCreated())
+		.andExpect(jsonPath("$.id").exists())
+		.andExpect(jsonPath("$.name").value("Expo XP"))
+		.andExpect(jsonPath("$.date").value(nextMonth.toString()))
+		.andExpect(jsonPath("$.url").value("https://expoxp.com.br"))
+		.andExpect(jsonPath("$.cityId").value(1L));
+	}
+	
+	@Test
+	public void insertShouldReturnUnprocessableEntityWhenAdminLoggedAndBlankName() throws Exception {
+
+		String accessToken = tokenUtil.obtainAccessToken(mockMvc, adminUsername, adminPassword);
+		LocalDate nextMonth = LocalDate.now().plusMonths(1L);
+		
+		EventDTO eventDTO = new EventDTO(null, "      ", nextMonth, "https://expoxp.com.br", 1L);
+		String jsonBody = objectMapper.writeValueAsString(eventDTO);
+		
+		mockMvc.perform(post("/events")
+				.header("Authorization", "Bearer " + accessToken)
+				.content(jsonBody)
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON))
+		.andExpect(status().isUnprocessableEntity())
+		.andExpect(jsonPath("$.errors[0].fieldName").value("name"))
+		.andExpect(jsonPath("$.errors[0].message").value("Campo requerido"));
+	}
+	
 }
