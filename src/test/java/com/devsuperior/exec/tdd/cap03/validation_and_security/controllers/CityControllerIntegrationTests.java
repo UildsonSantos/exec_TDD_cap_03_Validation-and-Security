@@ -1,6 +1,7 @@
 package com.devsuperior.exec.tdd.cap03.validation_and_security.controllers;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -32,11 +33,15 @@ public class CityControllerIntegrationTests {
 	
 	private String clientUsername;
 	private String clientPassword;
+	private String adminUsername;
+	private String adminPassword;
 	
 	@BeforeEach
 	void setUp() throws Exception {		
 		clientUsername = "ana@gmail.com";
 		clientPassword = "123456";
+		adminUsername = "bob@gmail.com";
+		adminPassword = "123456";
 	}
 	
 	@Test
@@ -63,5 +68,24 @@ public class CityControllerIntegrationTests {
 				.contentType(MediaType.APPLICATION_JSON)
 				.accept(MediaType.APPLICATION_JSON))
 		.andExpect(status().isForbidden());
+	}
+	
+	@Test
+	public void insertShouldCreatedResourceWhenAdminLoggedAndCorrectData() throws Exception {
+
+		String accessToken = tokenUtil.obtainAccessToken(mockMvc, adminUsername, adminPassword);
+
+		CityDTO cityDTO = new CityDTO(null, "Recife");
+		String jsonBody = objectMapper.writeValueAsString(cityDTO);
+		
+		
+		mockMvc.perform(post("/cities")				
+				.header("Authorization", "Bearer " + accessToken)
+				.content(jsonBody)
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON))
+		.andExpect(status().isCreated())
+		.andExpect(jsonPath("$.id").exists())
+		.andExpect(jsonPath("$.name").value("Recife"));
 	}
 }
